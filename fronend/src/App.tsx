@@ -10,7 +10,7 @@ import './App.css';
 const App = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = (tab:any) => {
     setActiveTab(tab);
   };
 
