@@ -1,7 +1,9 @@
 import React from 'react';
 import { Navbar, Nav, Container, Badge } from 'react-bootstrap';
+import { HeaderProps } from '../types/types';
 
-function Header({ onTabChange, activeTab }) {
+
+const Header: React.FC<HeaderProps> = ({ onTabChange, activeTab }) => {
   return (
     <Navbar bg="white" expand="lg" className="border-bottom" fixed="top">
       <Container fluid>
@@ -73,6 +75,6 @@ function Header({ onTabChange, activeTab }) {
       </Container>
     </Navbar>
   );
-}
+};
 
 export default Header;

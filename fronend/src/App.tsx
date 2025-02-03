@@ -7,10 +7,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.css';
 
-const App = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
 
-  const handleTabChange = (tab:any) => {
+  const handleTabChange = (tab: string): void => {
     setActiveTab(tab);
   };
 

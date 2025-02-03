@@ -1,9 +1,10 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import DashboardTile from './DashboardTile';
+import { DashboardTileProps } from '../types/types';
 
-function DashboardTiles() {
-  const tiles = [
+const DashboardTiles: React.FC = () => {
+  const tiles: DashboardTileProps[] = [
     {
       title: 'Patching Status',
       value: 'System Status',
@@ -80,6 +81,6 @@ function DashboardTiles() {
       </Row>
     </Container>
   );
-}
+};
 
 export default DashboardTiles;

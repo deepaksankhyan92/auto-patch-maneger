@@ -9,8 +9,10 @@ import {
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartOptions
 } from 'chart.js';
+import { DashboardTileProps, TableDataItem, PatchStatusDataItem } from '../types/types';
 
 ChartJS.register(
   ArcElement,
@@ -22,7 +24,7 @@ ChartJS.register(
   Legend
 );
 
-const DashboardTile = ({ title, value, showChart, chartType }) => {
+const DashboardTile: React.FC<DashboardTileProps> = ({ title, value, showChart, chartType }) => {
   const doughnutData = {
     labels: ['Windows', 'Linux', 'Ubuntu'],
     datasets: [{
@@ -121,7 +123,7 @@ const DashboardTile = ({ title, value, showChart, chartType }) => {
     }]
   };
 
-  const tableData = [
+  const tableData: TableDataItem[] = [
     {
       id: 'CR0123456',
       date: '20-06-2022 22:37:00',
@@ -152,7 +154,7 @@ const DashboardTile = ({ title, value, showChart, chartType }) => {
     }
   ];
 
-  const patchStatusData = [
+  const patchStatusData: PatchStatusDataItem[] = [
     {
       provider: 'AWS',
       os: 'Windows 2012R',
@@ -227,7 +229,7 @@ const DashboardTile = ({ title, value, showChart, chartType }) => {
     }
   ];
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -249,7 +251,7 @@ const DashboardTile = ({ title, value, showChart, chartType }) => {
     }
   };
 
-  const horizontalBarOptions = {
+  const horizontalBarOptions: ChartOptions<'bar'> = {
     ...chartOptions,
     indexAxis: 'y',
     scales: {
@@ -268,7 +270,7 @@ const DashboardTile = ({ title, value, showChart, chartType }) => {
     }
   };
 
-  const doughnutOptions = {
+  const doughnutOptions: ChartOptions<'doughnut'> = {
     cutout: '70%',
     plugins: {
       legend: {
@@ -281,7 +283,7 @@ const DashboardTile = ({ title, value, showChart, chartType }) => {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'completed':
         return 'success';

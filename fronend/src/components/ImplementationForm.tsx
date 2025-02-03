@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { FormData } from '../types/types';
 
-const ImplementationForm = () => {
-  const [formData, setFormData] = useState({
+const ImplementationForm: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
     implementationGroup: '',
     description: '',
     applicationName: '',
@@ -28,7 +29,7 @@ const ImplementationForm = () => {
     changeRequestRequired: false,
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -36,7 +37,7 @@ const ImplementationForm = () => {
     }));
   };
 
-  const handleServerChange = (index, value) => {
+  const handleServerChange = (index: number, value: string): void => {
     const updatedServers = [...formData.servers];
     updatedServers[index] = { name: value };
     setFormData((prev) => ({
@@ -45,14 +46,14 @@ const ImplementationForm = () => {
     }));
   };
 
-  const addServer = () => {
+  const addServer = (): void => {
     setFormData((prev) => ({
       ...prev,
       servers: [...prev.servers, { name: '' }],
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     console.log('Form submitted:', formData);
   };

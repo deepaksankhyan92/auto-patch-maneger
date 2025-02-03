@@ -1,7 +1,7 @@
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 
-function Sidebar() {
+const Sidebar: React.FC = () => {
   return (
     <div className="bg-light border-end" style={{ width: '60px', height: '100vh', position: 'fixed', top: '0', left: '0', paddingTop: '70px' }}>
       <Nav className="flex-column text-center">
@@ -23,6 +23,6 @@ function Sidebar() {
       </Nav>
     </div>
   );
-}
+};
 
 export default Sidebar;
