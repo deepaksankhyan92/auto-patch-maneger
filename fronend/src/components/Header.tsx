@@ -2,7 +2,6 @@ import React from 'react';
 import { Navbar, Nav, Container, Badge } from 'react-bootstrap';
 import { HeaderProps } from '../types/types';
 
-
 const Header: React.FC<HeaderProps> = ({ onTabChange, activeTab }) => {
   return (
     <Navbar bg="white" expand="lg" className="border-bottom" fixed="top">
@@ -24,7 +23,13 @@ const Header: React.FC<HeaderProps> = ({ onTabChange, activeTab }) => {
             >
               Home
             </Nav.Link>
-            <Nav.Link href="#request">My Request</Nav.Link>
+            <Nav.Link 
+              href="#request"
+              className={activeTab === 'request' ? 'active' : ''}
+              onClick={() => onTabChange('request')}
+            >
+              My Request
+            </Nav.Link>
             <Nav.Link 
               href="#chat" 
               className={activeTab === 'chat' ? 'active' : ''}
