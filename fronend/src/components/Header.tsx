@@ -16,22 +16,22 @@ const Header: React.FC<HeaderProps> = ({ onTabChange, activeTab }) => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
-            <Nav.Link 
-              href="#home" 
+            <Nav.Link
+              href="#home"
               className={activeTab === 'dashboard' ? 'active' : ''}
               onClick={() => onTabChange('dashboard')}
             >
               Home
             </Nav.Link>
-            <Nav.Link 
+            <Nav.Link
               href="#request"
               className={activeTab === 'request' ? 'active' : ''}
               onClick={() => onTabChange('request')}
             >
               My Request
             </Nav.Link>
-            <Nav.Link 
-              href="#chat" 
+            <Nav.Link
+              href="#chat"
               className={activeTab === 'chat' ? 'active' : ''}
               onClick={() => onTabChange('chat')}
             >
