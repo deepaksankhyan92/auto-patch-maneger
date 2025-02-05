@@ -98,6 +98,47 @@ const PatchOnboardingTwoForm: React.FC = () => {
     });
   };
 
+  const calculateDuration = (startTime: string, endTime: string): string => {
+    const parseTime = (timeStr: string) => {
+      const [time, period] = timeStr.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    };
+
+    const startMinutes = parseTime(startTime);
+    const endMinutes = parseTime(endTime);
+    let diffMinutes = endMinutes - startMinutes;
+    if (diffMinutes < 0) diffMinutes += 24 * 60; // Handle overnight duration
+
+    const hours = Math.round(diffMinutes / 60);
+    return `${hours} hours`;
+  };
+
+  const handleTimeChange = (type: 'start' | 'end', value: string) => {
+    setFormData(prev => {
+      const newTime = {
+        ...prev.patchSchedule.recurrencePattern.time,
+        [type]: value
+      };
+      
+      const duration = calculateDuration(newTime.start, newTime.end);
+      
+      return {
+        ...prev,
+        patchSchedule: {
+          ...prev.patchSchedule,
+          recurrencePattern: {
+            ...prev.patchSchedule.recurrencePattern,
+            time: newTime,
+            duration
+          }
+        }
+      };
+    });
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
@@ -231,19 +272,7 @@ const PatchOnboardingTwoForm: React.FC = () => {
               <Form.Label>Start:</Form.Label>
               <Form.Select
                 value={formData.patchSchedule.recurrencePattern.time.start}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  patchSchedule: {
-                    ...prev.patchSchedule,
-                    recurrencePattern: {
-                      ...prev.patchSchedule.recurrencePattern,
-                      time: {
-                        ...prev.patchSchedule.recurrencePattern.time,
-                        start: e.target.value
-                      }
-                    }
-                  }
-                }))}
+                onChange={(e) => handleTimeChange('start', e.target.value)}
               >
                 {Array.from({ length: 48 }).map((_, i) => {
                   const hour = Math.floor(i / 2);
@@ -262,19 +291,7 @@ const PatchOnboardingTwoForm: React.FC = () => {
               <Form.Label>End:</Form.Label>
               <Form.Select
                 value={formData.patchSchedule.recurrencePattern.time.end}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  patchSchedule: {
-                    ...prev.patchSchedule,
-                    recurrencePattern: {
-                      ...prev.patchSchedule.recurrencePattern,
-                      time: {
-                        ...prev.patchSchedule.recurrencePattern.time,
-                        end: e.target.value
-                      }
-                    }
-                  }
-                }))}
+                onChange={(e) => handleTimeChange('end', e.target.value)}
               >
                 {Array.from({ length: 48 }).map((_, i) => {
                   const hour = Math.floor(i / 2);
@@ -291,24 +308,12 @@ const PatchOnboardingTwoForm: React.FC = () => {
             </Col>
             <Col md={4}>
               <Form.Label>Duration:</Form.Label>
-              <Form.Select
+              <Form.Control
+                type="text"
                 value={formData.patchSchedule.recurrencePattern.duration}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  patchSchedule: {
-                    ...prev.patchSchedule,
-                    recurrencePattern: {
-                      ...prev.patchSchedule.recurrencePattern,
-                      duration: e.target.value
-                    }
-                  }
-                }))}
-              >
-                <option value="2 hours">2 hours</option>
-                <option value="4 hours">4 hours</option>
-                <option value="6 hours">6 hours</option>
-                <option value="8 hours">8 hours</option>
-              </Form.Select>
+                readOnly
+                disabled
+              />
             </Col>
           </Row>
         </div>
