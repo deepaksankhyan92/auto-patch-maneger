@@ -112,8 +112,16 @@ const PatchOnboardingTwoForm: React.FC = () => {
     let diffMinutes = endMinutes - startMinutes;
     if (diffMinutes < 0) diffMinutes += 24 * 60; // Handle overnight duration
 
-    const hours = Math.round(diffMinutes / 60);
-    return `${hours} hours`;
+    const hours = Math.floor(diffMinutes / 60);
+    const minutes = diffMinutes % 60;
+
+    if (hours === 0) {
+      return `${minutes} minutes`;
+    } else if (minutes === 0) {
+      return `${hours} hours`;
+    } else {
+      return `${hours} hours ${minutes} minutes`;
+    }
   };
 
   const handleTimeChange = (type: 'start' | 'end', value: string) => {
