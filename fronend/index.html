@@ -57,7 +57,7 @@
 			let uniqueId;
 			let bucketName;
 			let filePath;
-			let connectionId
+			let connectionId;
 			let message = {}
 			uploadButton.addEventListener('click', async () => {
             const file = fileInput.files[0];
@@ -107,13 +107,14 @@
         async function startProcessing(singleRequest, message) {
             //statusDiv.textContent = 'Initiating processing...';
             spinnerDiv.style.display = 'block';
-			const apiUrl = 'https://    daouf0xqgg.execute-api.ap-south-1.amazonaws.com/Test_stage/csv_processing';
+			const apiUrl = 'https://daouf0xqgg.execute-api.ap-south-1.amazonaws.com/Test_stage/csv_processing';
             try {
                 const startProcessResponse = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ bucketname: bucketName, filepath: filePath, connection: connectionId , single_request: singleRequest, Message: message})
                 });
+
                 const data = await startProcessResponse.json();
 				const data_final = JSON.parse(data.body)
 				console.error(data_final)
@@ -149,6 +150,7 @@
 				}
 
             };
+
             websocket.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
