@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Processing</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center; }
+        .json-input-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
+        .json-input-row { display: flex; align-items: center; }
+        .json-input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        #detailsInput { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-right: 10px; }
+        #sendJsonButton { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.3s ease; }
+        #sendJsonButton:hover { background-color: #1e7e34; }
+        #jsonOutput { margin-top: 15px; padding: 15px; border: 1px solid #eee; border-radius: 4px; background-color: #f9f9f9; text-align: left; white-space: pre-wrap; font-family: monospace; }
+        input[type="file"] { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        button { padding: 12px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s ease; margin-bottom: 15px; }
+        button:hover { background-color: #0056b3; }
+        #status { margin-top: 20px; font-weight: bold; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        #downloadLink { margin-top: 20px; display: none; }
+        #downloadLink a { color: #007bff; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Process Your File</h1>
+
+        <div class="json-input-group">
+            <label for="detailsInput">Enter JSON Data:</label>
+            <div class="json-input-row">
+                <textarea id="detailsInput" rows="4" placeholder='{"key": "value", "anotherKey": 123}'></textarea>
+                <button id="sendJsonButton">Send JSON</button>
+            </div>
+            <div id="jsonOutput"></div>
+        </div>
+
+        <div id="spinner" class="spinner"></div>
+        <div id="status"></div>
+        <div id="downloadLink"></div>
+        <input type="file" id="fileInput">
+        <button id="uploadButton">Upload File</button>
+    </div>
+
+    <script>
+            const sendJsonButton = document.getElementById('sendJsonButton');
+            const detailsInput = document.getElementById('detailsInput');
+            const jsonOutputDiv = document.getElementById('jsonOutput');
+			const fileInput = document.getElementById('fileInput');
+			const uploadButton = document.getElementById('uploadButton');
+			const statusDiv = document.getElementById('status');
+			const spinnerDiv = document.getElementById('spinner');
+			const downloadLinkDiv = document.getElementById('downloadLink');
+			let websocket;
+			let uniqueId;
+			let bucketName;
+			let filePath;
+			let connectionId
+			let message = {}
+			uploadButton.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                statusDiv.textContent = 'Please select a file.';
+                return;
+            }
+
+            // Disable the upload button
+            uploadButton.disabled = true;
+            statusDiv.textContent = 'Getting upload URL...';
+			apiUrl = 'https://c7ef52nxy1.execute-api.ap-south-1.amazonaws.com/Test_stage/get_pre_signed'
+			console.error(file.name)
+			console.error
+            try {
+                const presignedUrlResponse = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({ filename: file.name, filetype: file.type }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await presignedUrlResponse.json();
+				const data_final = JSON.parse(data.body)
+				console.error(data)
+				uploadUrl = data_final.uploadUrl
+				bucketName = data_final.bucket
+				filePath = data_final.key
+                statusDiv.textContent = 'Uploading file...';
+                const response = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': file.type },
+                    body: file
+                });
+				  if (response.ok) {
+                    statusDiv.innerText = `File "${file.name}" uploaded successfully to S3. Getting Session_id` ;
+					connectWebSocket('N', {} ) 
+                } else {
+                    statusDiv.innerText = `Upload failed with status: ${response.status}`;
+                    console.error('Upload failed:', response);
+                }
+            } catch (error) {
+                statusDiv.textContent = `Upload failed: ${error}`;
+                // Re-enable the upload button on failure
+                uploadButton.disabled = false;
+            }
+        });
+
+        async function startProcessing(singleRequest, message) {
+            //statusDiv.textContent = 'Initiating processing...';
+            spinnerDiv.style.display = 'block';
+			const apiUrl = 'https://    daouf0xqgg.execute-api.ap-south-1.amazonaws.com/Test_stage/csv_processing';
+            try {
+                const startProcessResponse = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bucketname: bucketName, filepath: filePath, connection: connectionId , single_request: singleRequest, Message: message})
+                });
+                const data = await startProcessResponse.json();
+				const data_final = JSON.parse(data.body)
+				console.error(data_final)
+                //uniqueId = data_final.sessionid;
+                //statusDiv.textContent = `Processing started with ID: ${uniqueId}. Connecting to WebSocket...`;
+                
+                // Optionally, you could disable the upload button further here
+                // if you want it disabled during the entire processing phase.
+                uploadButton.disabled = true;
+            } catch (error) {
+                statusDiv.textContent = `Failed to start processing: ${error}`;
+                spinnerDiv.style.display = 'none';
+                // Re-enable the upload button if starting processing fails
+                uploadButton.disabled = false;
+            }
+        }
+
+        function connectWebSocket(singleRequest, message) {
+            const wsEndpoint = 'wss://7a7zsszjf6.execute-api.ap-south-1.amazonaws.com/sample_stage/';
+            websocket = new WebSocket(wsEndpoint);
+
+            websocket.onopen = () => {
+                statusDiv.textContent = `WebSocket connected. Waiting for processing to complete (ID: ${uniqueId})...`;
+                // You might want to keep the button disabled here as well.
+				if (singleRequest === 'N'){
+					const initialMessage = { "action": "getClientId", "single_request":'N' };
+					websocket.send(JSON.stringify(initialMessage));
+				}
+				else
+				{
+					const initialMessage = { "action": "getClientId", "single_request":'Y' };
+					websocket.send(JSON.stringify(initialMessage));
+				}
+
+            };
+            websocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+						console.error(data)
+                    if (data.type === 'excelUpdateComplete') {
+                        statusDiv.textContent = 'Processing complete. Preparing download...';
+                        spinnerDiv.style.display = 'none';
+                        //const processedFileKey = data.presigned;
+                        const downloadUrl = data.presigned;
+                        downloadLinkDiv.innerHTML = `<a href="${downloadUrl}" download="${fileInput.files[0].name}">Download Processed File</a>`;
+                        downloadLinkDiv.style.display = 'block';
+                        closeWebSocket();
+                        // Re-enable the upload button after completion (if desired)
+                        uploadButton.disabled = false;
+					}
+					else if (data.type === 'outputComplete'){
+						spinnerDiv.style.display = 'none'
+						jsonOutputDiv.textContent = JSON.stringify(data.Message, null, 2);
+						closeWebSocket();
+					}
+					else if (data.type === 'inputProcessingComplete') {
+					    sessionId = data.sessionid
+						statusDiv.textContent = `Processing started with ID: ${sessionId}. Connecting to WebSocket...`;
+						console.error(sessionId)
+					} else if (data.type === 'connectionInfo') {
+					    connectionId = data.connectionId
+						const singleRequest = data.single_request
+						console.error(connectionId)
+						startProcessing(singleRequest, message)
+                    } else if (data.type === 'notification') {
+                        console.log('Notification:', data.message);
+                        statusDiv.textContent = data.message;
+                    }
+                } catch (error) {
+                    console.error('Error processing WebSocket message:', error);
+                }
+            };
+
+            websocket.onclose = () => {
+                statusDiv.textContent = `WebSocket connection closed.`;
+                // Re-enable the upload button on disconnect (if desired)
+                uploadButton.disabled = false;
+            };
+
+            websocket.onerror = (error) => {
+                statusDiv.textContent = `WebSocket error: ${error}`;
+                spinnerDiv.style.display = 'none';
+                // Re-enable the upload button on error
+                uploadButton.disabled = false;
+            };
+        }
+
+        function closeWebSocket() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.close();
+            }
+        }
+
+        function getMyTrackedUniqueId() {
+            return uniqueId;
+        }
+
+            sendJsonButton.addEventListener('click', function() {
+                const jsonDataString = detailsInput.value;
+
+                try {
+                    const jsonData = JSON.parse(jsonDataString);
+					console.error(jsonData)
+                    jsonOutputDiv.textContent = JSON.stringify(jsonData, null, 2);
+                    statusDiv.textContent = 'Sending JSON data...';
+                    spinnerDiv.style.display = 'block';
+					connectWebSocket('Y', jsonData)
+
+                } catch (e) {
+                    jsonOutputDiv.textContent = 'Invalid JSON format entered.';
+                    statusDiv.textContent = 'Invalid JSON format.';
+                    spinnerDiv.style.display = 'none'; // Ensure spinner is hidden on parse error
+                    console.error('Invalid JSON:', e);
+                }
+            });
+		
+    </script>
+</body>
+</html>
