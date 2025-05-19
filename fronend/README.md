@@ -80,3 +80,28 @@
     }
   ]
 }
+
+
+
+
+
+Pls add the below highligted in the api call, i have modified the API  to include this, so it may result in error if you dont sent this pls hard code and send for now. 
+async function startProcessing(singleRequest, message){
+ 
+   spinnerDiv.style.display = 'block';
+			const apiUrl = 'https://daouf0xqgg.execute-api.ap-south-1.amazonaws.com/Test_stage/csv_processing';
+            try {
+                const startProcessResponse = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bucketname: bucketName, filepath: filePath, connection: connectionId ,
+					single_request: singleRequest, Message: message, cloudprovider :'AWS,GCP,AZURE', showllmoutput:'Y'})
+                });
+                const data = await startProcessResponse.json();
+				const data_final = JSON.parse(data.body)
+				console.error(data_final)
+                //uniqueId = data_final.sessionid;
+                //statusDiv.textContent = `Processing started with ID: ${uniqueId}. Connecting to WebSocket...`;
+                // Optionally, you could disable the upload button further here
+                // if you want it disabled during the entire processing phase.
+                uploadButton.disabled = true;
