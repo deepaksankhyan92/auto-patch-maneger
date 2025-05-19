@@ -166,3 +166,39 @@ if show llm output
 
 
 https://d1gcmj7t2xqvsq.cloudfront.net/index.html
+
+
+
+
+
+i guess you need to send one sample message. 
+ 
+to return the connection id, once we get the message then we can use the conneciton id and send message. 
+ 
+
+
+            websocket.onopen = () => {
+
+                statusDiv.textContent = `WebSocket connected. Waiting for processing to complete (ID: ${uniqueId})...`;
+
+                // You might want to keep the button disabled here as well.
+
+				if (singleRequest === 'N'){
+
+					const initialMessage = { "action": "getClientId", "single_request":'E' };
+
+					websocket.send(JSON.stringify(initialMessage));
+
+				}
+
+				else
+
+				{
+
+					const initialMessage = { "action": "getClientId", "single_request":'Y' };
+
+					websocket.send(JSON.stringify(initialMessage));
+
+				}
+
+ 
