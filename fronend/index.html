@@ -7,9 +7,8 @@
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f4f4f4; }
         .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center; }
-        .json-input-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
-        .json-input-row { display: flex; align-items: center; }
-        .json-input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
         #detailsInput { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-right: 10px; }
         #sendJsonButton { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.3s ease; }
         #sendJsonButton:hover { background-color: #1e7e34; }
@@ -28,7 +27,24 @@
     <div class="container">
         <h1>Process Your File</h1>
 
-        <div class="json-input-group">
+        <div class="form-group">
+            <label for="cloudProvider">Cloud Provider:</label>
+            <select id="cloudProvider">
+                <option value="AWS">AWS</option>
+                <option value="GCP">GCP</option>
+                <option value="AZURE">AZURE</option>
+                <option value="ALL" selected >ALL</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>
+                show llm Outputs:
+                <input type="checkbox" id="multiSupport">
+            </label>
+        </div>
+
+        <div class="form-group">
             <label for="detailsInput">Enter JSON Data:</label>
             <div class="json-input-row">
                 <textarea id="detailsInput" rows="4" placeholder='{"key": "value", "anotherKey": 123}'></textarea>
@@ -40,7 +56,10 @@
         <div id="spinner" class="spinner"></div>
         <div id="status"></div>
         <div id="downloadLink"></div>
-        <input type="file" id="fileInput">
+        <div class="form-group">
+            <label for="fileInput">Select File:</label>
+            <input type="file" id="fileInput">
+        </div>
         <button id="uploadButton">Upload File</button>
     </div>
 
@@ -53,11 +72,13 @@
 			const statusDiv = document.getElementById('status');
 			const spinnerDiv = document.getElementById('spinner');
 			const downloadLinkDiv = document.getElementById('downloadLink');
+			const selectedCloud = document.getElementById('cloudProvider');
+			const multiSupportCheckbox = document.getElementById('multiSupport');
 			let websocket;
 			let uniqueId;
 			let bucketName;
 			let filePath;
-			let connectionId;
+			let connectionId
 			let message = {}
 			uploadButton.addEventListener('click', async () => {
             const file = fileInput.files[0];
@@ -65,13 +86,17 @@
                 statusDiv.textContent = 'Please select a file.';
                 return;
             }
+			
+			const multiSupportValue = multiSupportCheckbox.checked ? 'Y' : 'N';
+			const cloudProviderDropdown = processCloudProvider(selectedCloud.value)
 
             // Disable the upload button
             uploadButton.disabled = true;
             statusDiv.textContent = 'Getting upload URL...';
 			apiUrl = 'https://c7ef52nxy1.execute-api.ap-south-1.amazonaws.com/Test_stage/get_pre_signed'
 			console.error(file.name)
-			console.error
+			console.error(multiSupportValue)
+			console.error(cloudProviderDropdown)
             try {
                 const presignedUrlResponse = await fetch(apiUrl, {
                     method: 'POST',
@@ -92,7 +117,7 @@
                 });
 				  if (response.ok) {
                     statusDiv.innerText = `File "${file.name}" uploaded successfully to S3. Getting Session_id` ;
-					connectWebSocket('N', {} ) 
+					connectWebSocket('N', {}, multiSupportValue,  cloudProviderDropdown) 
                 } else {
                     statusDiv.innerText = `Upload failed with status: ${response.status}`;
                     console.error('Upload failed:', response);
@@ -103,18 +128,27 @@
                 uploadButton.disabled = false;
             }
         });
+		
+		function processCloudProvider(cloud) {
+			if (cloud === "ALL") {
+				return "AWS,GCP,AZURE"; // Or any other value you want to use for "ALL"
+			} else {
+				return cloud; // Keep the original value if it's not "ALL"
+			}
+		}
 
-        async function startProcessing(singleRequest, message) {
+        async function startProcessing(singleRequest, message, multiSupportValue, cloudProviderDropdown) {
             //statusDiv.textContent = 'Initiating processing...';
             spinnerDiv.style.display = 'block';
 			const apiUrl = 'https://daouf0xqgg.execute-api.ap-south-1.amazonaws.com/Test_stage/csv_processing';
+			console.error(multiSupportValue , cloudProviderDropdown)
             try {
                 const startProcessResponse = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ bucketname: bucketName, filepath: filePath, connection: connectionId , single_request: singleRequest, Message: message})
+                    body: JSON.stringify({ bucketname: bucketName, filepath: filePath, connection: connectionId ,
+					single_request: singleRequest, Message: message, cloudprovider : cloudProviderDropdown, showllmoutput: multiSupportValue})
                 });
-
                 const data = await startProcessResponse.json();
 				const data_final = JSON.parse(data.body)
 				console.error(data_final)
@@ -132,7 +166,7 @@
             }
         }
 
-        function connectWebSocket(singleRequest, message) {
+        function connectWebSocket(singleRequest, message, multiSupportValue, cloudProviderDropdown) {
             const wsEndpoint = 'wss://7a7zsszjf6.execute-api.ap-south-1.amazonaws.com/sample_stage/';
             websocket = new WebSocket(wsEndpoint);
 
@@ -150,7 +184,6 @@
 				}
 
             };
-
             websocket.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -179,7 +212,7 @@
 					    connectionId = data.connectionId
 						const singleRequest = data.single_request
 						console.error(connectionId)
-						startProcessing(singleRequest, message)
+						startProcessing(singleRequest, message, multiSupportValue, cloudProviderDropdown)
                     } else if (data.type === 'notification') {
                         console.log('Notification:', data.message);
                         statusDiv.textContent = data.message;
@@ -217,12 +250,14 @@
                 const jsonDataString = detailsInput.value;
 
                 try {
+					const multiSupportValue = multiSupportCheckbox.checked ? 'Y' : 'N';
+					const cloudProviderDropdown = processCloudProvider(selectedCloud.value)
                     const jsonData = JSON.parse(jsonDataString);
 					console.error(jsonData)
                     jsonOutputDiv.textContent = JSON.stringify(jsonData, null, 2);
                     statusDiv.textContent = 'Sending JSON data...';
                     spinnerDiv.style.display = 'block';
-					connectWebSocket('Y', jsonData)
+					connectWebSocket('Y', jsonData, multiSupportValue, cloudProviderDropdown)
 
                 } catch (e) {
                     jsonOutputDiv.textContent = 'Invalid JSON format entered.';
